@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+    title: Student Health Records API
+    version: 1.0.0
+    description: REST API for managing students and their health records
+
+servers:
+    - url: http://localhost:3000/api
+      description: Local development server
+
+paths:
+    /students:
+        get:
+            summary: Get all students
+            responses:
+                "200":
+                    description: List of students
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Student"
+
+        post:
+            summary: Create a student
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Student"
+            responses:
+                "201":
+                    description: Student created
+
+    /students/{student_id}:
+        get:
+            summary: Get student by ID
+            parameters:
+                - $ref: "#/components/parameters/StudentId"
+            responses:
+                "200":
+                    description: Student record
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Student"
+
+    /students/search:
+        get:
+            summary: Query students by search parameters
+            parameters:
+                - name: student_id
+                  in: query
+                  schema:
+                      type: integer
+                - name: name
+                  in: query
+                  schema:
+                      type: string
+                - name: class
+                  in: query
+                  schema:
+                      type: string
+                - name: dob
+                  in: query
+                  schema:
+                      type: string
+                      format: date
+            responses:
+                "200":
+                    description: Matching students
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Student"
+
+    /students/bmi/abnormal:
+        get:
+            summary: Get students with BMI < 18 or > 25
+            responses:
+                "200":
+                    description: Student IDs with abnormal BMI
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    type: integer
+
+    /students/{student_id}/health-records/count:
+        get:
+            summary: Count health records for a student
+            parameters:
+                - $ref: "#/components/parameters/StudentId"
+            responses:
+                "200":
+                    description: Count result
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    student_id:
+                                        type: integer
+                                    count:
+                                        type: integer
+
+    /health-records:
+        get:
+            summary: Get all health records
+            responses:
+                "200":
+                    description: List of health records
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/HealthRecord"
+
+        post:
+            summary: Create a health record
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/HealthRecord"
+            responses:
+                "201":
+                    description: Health record created
+
+    /health-records/{record_id}:
+        get:
+            summary: Get health record by ID
+            parameters:
+                - $ref: "#/components/parameters/RecordId"
+            responses:
+                "200":
+                    description: Health record
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/HealthRecord"
+
+    /health-records/search:
+        get:
+            summary: Query health records by filters
+            parameters:
+                - name: record_id
+                  in: query
+                  schema:
+                      type: integer
+                - name: startDate
+                  in: query
+                  schema:
+                      type: string
+                      format: date
+                - name: endDate
+                  in: query
+                  schema:
+                      type: string
+                      format: date
+                - name: minHeight
+                  in: query
+                  schema:
+                      type: integer
+                - name: maxHeight
+                  in: query
+                  schema:
+                      type: integer
+                - name: minWeight
+                  in: query
+                  schema:
+                      type: integer
+                - name: maxWeight
+                  in: query
+                  schema:
+                      type: integer
+            responses:
+                "200":
+                    description: Matching health records
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/HealthRecord"
+
+    /health-records/outliers:
+        get:
+            summary: Get outlier health records
+            parameters:
+                - name: type
+                  in: query
+                  required: true
+                  schema:
+                      type: string
+                      enum: [height, weight, bmi]
+            responses:
+                "200":
+                    description: Outlier records
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/HealthRecord"
+
+    /classes/{className}/health-records/average:
+        get:
+            summary: Get average height and weight by class
+            parameters:
+                - name: className
+                  in: path
+                  required: true
+                  schema:
+                      type: string
+            responses:
+                "200":
+                    description: Average height and weight
+                    content:
+                        application/json:
+                            schema:
+                                type: object
+                                properties:
+                                    class:
+                                        type: string
+                                    averageHeight:
+                                        type: number
+                                        format: float
+                                    averageWeight:
+                                        type: number
+                                        format: float
+
+components:
+    parameters:
+        StudentId:
+            name: student_id
+            in: path
+            required: true
+            schema:
+                type: integer
+
+        RecordId:
+            name: record_id
+            in: path
+            required: true
+            schema:
+                type: integer
+
+    schemas:
+        Student:
+            type: object
+            required: [student_id, name, class, dob]
+            properties:
+                student_id:
+                    type: integer
+                name:
+                    type: string
+                class:
+                    type: string
+                dob:
+                    type: string
+                    format: date
+
+        HealthRecord:
+            type: object
+            required: [record_id, student_id, date, height, weight]
+            properties:
+                record_id:
+                    type: integer
+                student_id:
+                    type: integer
+                date:
+                    type: string
+                    format: date
+                height:
+                    type: integer
+                weight:
+                    type: integer
+                notes:
+                    type: string
